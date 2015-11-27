@@ -199,8 +199,11 @@ sc_array_resize (sc_array_t * array, size_t new_count)
   roundup = (size_t) SC_ROUNDUP2_64 (newoffs);
   SC_ASSERT (roundup >= newoffs && roundup <= 2 * newoffs);
 
-  if (newoffs > (size_t) array->byte_alloc ||
-      roundup < (size_t) array->byte_alloc) {
+  if (newoffs > (size_t) array->byte_alloc
+#ifdef SC_ENABLE_USE_REALLOC
+      || roundup < (size_t) array->byte_alloc
+#endif
+    ) {
     array->byte_alloc = (ssize_t) roundup;
   }
   else {
@@ -215,6 +218,9 @@ sc_array_resize (sc_array_t * array, size_t new_count)
     return;
   }
   SC_ASSERT ((size_t) array->byte_alloc >= newoffs);
+#ifndef SC_ENABLE_USE_REALLOC
+  SC_ASSERT (newoffs > oldoffs);
+#endif
 
   newsize = (size_t) array->byte_alloc;
 #ifdef SC_ENABLE_USE_REALLOC
