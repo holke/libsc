@@ -25,6 +25,31 @@
 
 #define DATA_SIZE 10
 
+#include <spi/include/kernel/memory.h>
+
+void print_memusage()
+{
+  uint64_t shared, persist, heapavail, stackavail, stack, heap, guard, mmap;
+
+  Kernel_GetMemorySize(KERNEL_MEMSIZE_GUARD, &guard);
+  Kernel_GetMemorySize(KERNEL_MEMSIZE_SHARED, &shared);
+  Kernel_GetMemorySize(KERNEL_MEMSIZE_PERSIST, &persist);
+  Kernel_GetMemorySize(KERNEL_MEMSIZE_HEAPAVAIL, &heapavail);
+  Kernel_GetMemorySize(KERNEL_MEMSIZE_STACKAVAIL, &stackavail);
+  Kernel_GetMemorySize(KERNEL_MEMSIZE_STACK, &stack);
+  Kernel_GetMemorySize(KERNEL_MEMSIZE_HEAP, &heap);
+  Kernel_GetMemorySize(KERNEL_MEMSIZE_MMAP, &mmap);
+#if 0
+  printf("Allocated heap: %.2f MB, avail. heap: %.2f MB\n", double(heap)/(1024*1024), double(heapavail)/(1024*1024));
+  printf("Allocated stack: %.2f MB, avail. stack: %.2f MB\n", double(stack)/(1024*1024), double(stackavail)/(1024*1024));
+  printf("Memory: shared: %.2f MB, persist: %.2f MB, guard: %.2f MB, mmap: %.2f MB\n", double(shared)/(1024*1024), double(persist)/(1024*1024), double(guard)/(1024*1024), double(mmap)/(1024*1024));
+#else
+  printf("MEMSIZE heap: %.2f/%.2f stack: %.2f/%.2f mmap: %.2f MB\n", (double)heap/(1024*1024), (double)heapavail/(1024*1024), (double)stack/(1024*1024), (double)stackavail/(1024*1024), (double)mmap/(1024*1024));
+  printf("MEMSIZE shared: %.2f persist: %.2f guard: %.2f MB\n", (double)shared/(1024*1024), (double)persist/(1024*1024), (double)guard/(1024*1024));
+#endif
+}
+
+
 /* This struct stores data which we use to test shared
  * memory arrays.
  */
@@ -121,8 +146,10 @@ test_shmem_create_data_array (sc_shmem_type_t type, int mpirank, int mpisize)
 
   sc_shmem_set_type (sc_MPI_COMM_WORLD, type);
 
+print_memusage();
   data_array = SC_SHMEM_ALLOC (data_t, mpisize, sc_MPI_COMM_WORLD);
   SC_CHECK_ABORT (data_array != NULL, "Allocation failed");
+print_memusage();
 
   sc_shmem_allgather (&data, sizeof (data_t), sc_MPI_BYTE, data_array,
                       sizeof (data_t), sc_MPI_BYTE, sc_MPI_COMM_WORLD);
